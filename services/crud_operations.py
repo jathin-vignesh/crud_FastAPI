@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from db import Base
 from sqlalchemy import Column, Integer, String
-from schemas.crud_schema import PersonCreate
+from schemas.crud_schema import PersonCreate,PersonUpdate
 from typing import List
 from models.crud_models import Person as User
 from fastapi import HTTPException, status
@@ -24,13 +24,16 @@ def get_users(db: Session) -> List[User]:
 def get_user(db: Session, user_id: int):
     return db.query(User).filter(User.id == user_id).first()
 
-def update_user(db: Session, user_id: int, user: PersonCreate):
+def update_user(db: Session, user_id: int, user: PersonUpdate):
     db_user = db.query(User).filter(User.id == user_id).first()
-    if db_user:
-        for key, value in user.dict().items():
-            setattr(db_user, key, value)
-        db.commit()
-        db.refresh(db_user)
+    if not db_user:
+        return None
+    update_data = user.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
+
+    db.commit()
+    db.refresh(db_user)
     return db_user
 
 def delete_user(db: Session, user_id: int):

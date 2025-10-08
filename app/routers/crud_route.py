@@ -24,16 +24,9 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 @router.put("/users/{user_id}", response_model=PersonResponse)
 def update_user(user_id: int, user: PersonUpdate, db: Session = Depends(get_db)):
-    db_user = db.query(crud.User).filter(crud.User.id == user_id).first()
+    db_user = crud.update_user(db, user_id, user)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    update_data = user.dict(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(db_user, key, value)
-
-    db.commit()
-    db.refresh(db_user)
     return db_user
 
 
