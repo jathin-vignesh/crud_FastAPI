@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,BackgroundTasks
 from sqlalchemy.orm import Session
 from db import get_db
 from services import crud_operations as crud
 from schemas.crud_schema import PersonCreate, PersonResponse,PersonUpdate
 from typing import List
-
+from utils.email_utils import send_registration_email
 router = APIRouter()
 
 @router.post("/users", response_model=PersonResponse)
-def create_user(user: PersonCreate, db: Session = Depends(get_db)):
+def create_user(user: PersonCreate, background_tasks: BackgroundTasks,db: Session = Depends(get_db)):
+    send_registration_email(background_tasks, user.email, user.name)
     return crud.create_user(db, user)
 
 @router.get("/users", response_model=List[PersonResponse])
